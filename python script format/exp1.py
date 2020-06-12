@@ -1,0 +1,156 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Breast Cancer: Malignant Or Benign
+# ### Predict
+# Breast cancer cell classification using K-Nearest Neighbor classifier. Use the dataset of file wisc_bc_data.csv. Use the following settings to design the classifier:
+# -	Min-max feature normalization.
+# -	Out of 569 data samples use the 1 to 469 for creating training dataset. Use rest of the samples to estimate the accuracy of the classifier.
+# -	Calculate the accuracies for K = 9, 11, 13, 15, 17 and 19
+# 
+
+# In[1]:
+
+
+import pandas as pd
+import numpy as np 
+#Read the dataset using pandas
+df = pd.read_csv('wisc_bc_data.csv')
+
+
+# ##  Exploratory data analysis
+# Printing first 5 rows of the train dataset.
+
+# In[2]:
+
+
+df.head(5)
+
+
+# ### Data Dictionary
+# - radius_mean
+# - texture_mean
+# - perimeter_mean
+# - area_mean
+# - smoothness_mean
+# - compactness_mean
+# - concavity_mean
+# - concave points_mean
+# - symmetry_mean
+# - fractal_dimension_mean
+# - radius_se
+# - texture_se
+# - perimeter_se
+# - area_se
+# - smoothness_se
+# - compactness_se
+# - concavity_se
+# - concave points_se
+# - symmetry_se
+# - fractal_dimension_se
+# - radius_worst
+# - texture_worst
+# - perimeter_worst
+# - area_worst
+# - smoothness_worst
+# - compactness_worst
+# - concavity_worst
+# - concave points_worst
+# - symmetry_worst
+# - fractal_dimension_worst
+
+# In[3]:
+
+
+df.shape
+
+
+# ###  Totaal rows = 569, Total columns = 33
+
+# In[4]:
+
+
+#check if all the columns have numerical values
+df.info()
+
+
+# In[5]:
+
+
+#check if there are any null cells in dataset
+df.isnull().sum()
+
+
+# In[6]:
+
+
+#preprocessing
+#map diagnosis to numerical values 1,0 for M & B respectively
+def diagnosis_mapping(diagnosis): 
+    if diagnosis == 'M': 
+        return 1
+    else: 
+        return 0
+    
+df['diagnosis'] = df['diagnosis'].apply(diagnosis_mapping) 
+
+
+# In[7]:
+
+
+#extracting only featues from whole dataset 
+X = np.array(df.iloc[:, 2:])
+
+#extracting only lables from whole dataset
+y = np.array(df['diagnosis'])
+
+
+# In[8]:
+
+
+#Min-max feature normalization [0,1] using sklearn
+from sklearn import preprocessing
+min_max_scaler = preprocessing.MinMaxScaler()
+X = min_max_scaler.fit_transform(X)
+print(X)
+
+
+# In[9]:
+
+
+#Dividing samples into train and test data 
+#Out of 569 data samples using the 1 to 469 for creating training dataset. Using rest of the samples to estimate the accuracy of the classifier
+X_train, X_test = X[:469,:], X[469:,:]
+y_train, y_test = y[:469], y[469:]
+
+
+# In[10]:
+
+
+#importing KNN model from sklearn
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import metrics
+list_K = [9,11,13,15,17,19] #making a list of ks given in the question
+scores = {}
+scores_list = []
+for k in list_K:  
+    knn = KNeighborsClassifier(n_neighbors = k)
+    knn.fit(X_train,y_train)    #training the model
+    y_pred = knn.predict(X_test) #testing the model
+    scores[k] = metrics.accuracy_score(y_test,y_pred)
+    scores_list.append(metrics.accuracy_score(y_test,y_pred))
+scores #stored dictionary of k with their accuracies as key
+
+
+# In[11]:
+
+
+#ploting k and acuracies
+from matplotlib import pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+plt.figure(figsize = (10, 6)) 
+plt.plot(list_K,scores_list) 
+plt.xlabel('Value of K for KNN') 
+plt.ylabel('Testing Accuracy') 
+plt.show() 
+
